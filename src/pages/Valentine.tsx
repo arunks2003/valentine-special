@@ -18,6 +18,8 @@ const noTexts = [
 ];
 
 export default function Valentine() {
+  const isMobile = window.innerWidth < 768;
+
   const [step, setStep] = useState(0);
   const [yesScale, setYesScale] = useState(1);
   const [accepted, setAccepted] = useState(false);
@@ -25,20 +27,27 @@ export default function Valentine() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleNoAction = () => {
-    // Increase text and Yes button size on every attempt
     setStep((prev) => Math.min(prev + 1, noTexts.length - 1));
     setYesScale((prev) => prev + 0.25);
 
-    // Make the button start jumping away after 2 attempts
-    if (step >= 1 && containerRef.current) {
-      const container = containerRef.current.getBoundingClientRect();
+    if (!containerRef.current) return;
 
-      // Calculate a random position within the viewport
-      const randomX = (Math.random() - 0.5) * (container.width * 0.7);
-      const randomY = (Math.random() - 0.5) * (container.height * 0.7);
+    const container = containerRef.current.getBoundingClientRect();
 
-      setNoButtonPos({ x: randomX, y: randomY });
+    let randomX = 0;
+    let randomY = 0;
+
+    if (isMobile) {
+      // MOBILE: controlled playful movement
+      randomX = (Math.random() - 0.5) * 120; // max ±60px
+      randomY = (Math.random() - 0.5) * 80; // max ±40px
+    } else {
+      // DESKTOP: wild movement
+      randomX = (Math.random() - 0.5) * (container.width * 0.7);
+      randomY = (Math.random() - 0.5) * (container.height * 0.6);
     }
+
+    setNoButtonPos({ x: randomX, y: randomY });
   };
 
   const handleYes = () => {
@@ -101,9 +110,14 @@ export default function Valentine() {
           <motion.button
             animate={{ x: noButtonPos.x, y: noButtonPos.y }}
             transition={{ type: "spring", stiffness: 600, damping: 25 }}
-            onMouseEnter={handleNoAction} // Mobile & Desktop interaction
-            onClick={handleNoAction} // Ensures progress even if "caught"
-            className="bg-white text-gray-500 border-2 border-gray-200 px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 whitespace-nowrap"
+            onMouseEnter={handleNoAction}
+            onClick={handleNoAction}
+            className="
+                bg-white text-gray-500 border-2 border-gray-200
+                px-8 py-4 rounded-2xl font-semibold text-lg
+                hover:bg-gray-50 whitespace-nowrap
+                max-w-[90vw]
+            "
           >
             {noTexts[step]}
           </motion.button>
